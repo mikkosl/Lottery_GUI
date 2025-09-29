@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="Lottery_GUI/Lottery_GUI.vcxproj" Id="5072ce03-e569-4379-98be-095ea9f26c3d" />
+</Solution>

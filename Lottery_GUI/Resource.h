@@ -9,13 +9,13 @@
 #define IDD_ABOUTBOX			103
 #define IDM_ABOUT				104
 #define IDM_EXIT				105
-#define IDM_SETROWS				1101
 #define IDD_SETROWS				2001
+#define IDC_EDIT_ROWS			2002
+#define IDM_SETROWS				1101
 #define IDI_LOTTERYGUI			107
 #define IDI_SMALL				108
 #define IDC_LOTTERYGUI			109
 #define IDC_MYICON				2
-#define IDC_EDIT_ROWS			2002
 #ifndef IDC_STATIC
 #define IDC_STATIC				-1
 #endif

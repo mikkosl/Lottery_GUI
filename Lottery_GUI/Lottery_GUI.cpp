@@ -9,12 +9,6 @@
 #include <sstream>
 
 #define MAX_LOADSTRING 100
-//#define IDM_SETROWS 1101 // Choose a unique value not used by other menu commands
-//#include <iostream>
-//using namespace std;
-//cout << "Hello"; // For debugging purposes
-//cin.get();
-
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
@@ -67,16 +61,16 @@ std::wstring FormatLotteryRow(const std::vector<int>& numbers)
 }
 
 // Add a function to prompt for number of rows
-#include <windows.h>
 int PromptForNumRows(HWND hWnd, int currentRows) {
     wchar_t buf[16];
     swprintf_s(buf, L"%d", currentRows);
+   
     INT_PTR result = DialogBoxParam(
         hInst,
         MAKEINTRESOURCE(IDD_SETROWS),
         hWnd,
         [](HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam) -> INT_PTR {
-            switch (msg) {
+        switch (msg) {
             case WM_INITDIALOG:
                 SetDlgItemText(hDlg, IDC_EDIT_ROWS, (LPCWSTR)lParam);
                 return TRUE;
@@ -110,6 +104,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(lpCmdLine);
 
     // TODO: Place code here.
+
 
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
@@ -211,31 +206,27 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_COMMAND:
         {
-		int newRows = g_numRows; // Initialize with current number of rows  
+//		int newRows = g_numRows; // Initialize with current number of rows  
         int wmId = LOWORD(wParam);
             // Parse the menu selections:
             switch (wmId)
             {
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-                //newRows = PromptForNumRows(hWnd, g_numRows);
                 break;
             case IDM_EXIT:
                 DestroyWindow(hWnd);
-                //newRows = PromptForNumRows(hWnd, g_numRows);
                 break;
-            case IDM_SETROWS: // Add this menu item in your resource file
+   /*       case IDM_SETROWS: // Add this menu item in your resource file
             {
-                newRows = PromptForNumRows(hWnd, g_numRows);
+			newRows = PromptForNumRows(hWnd, g_numRows);           // Prompt user for new number of rows
                 if (newRows != g_numRows) {
                     g_numRows = newRows;
                     InvalidateRect(hWnd, NULL, TRUE); // Force repaint
-                   }
-               }
-            // break;
-            default:
+                }
+            }
+   */       default:
                 return DefWindowProc(hWnd, message, wParam, lParam);
-                     
             }
         }
         break;
@@ -246,6 +237,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             int y = 20;
             std::vector<std::vector<int>> rows;
+            g_numRows = PromptForNumRows(hWnd, g_numRows);           // Prompt user for new number of rows
             while (rows.size() < g_numRows) {
                 auto candidate = GenerateLotteryNumbers();
                 bool duplicate = false;
@@ -261,7 +253,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
             for (const auto& row : rows) {
                 std::wstring rowStr = FormatLotteryRow(row);
-                TextOutW(hdc, 20, y, rowStr.c_str(), (int)rowStr.length());
+                TextOutW(hdc, 20, y, rowStr.c_str(), (int)rowStr.length());           // Output rows
                 y += 30;
             }
 

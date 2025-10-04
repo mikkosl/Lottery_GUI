@@ -79,7 +79,7 @@ int PromptForNumRows(HWND hWnd, int currentRows) {
                     wchar_t input[16];
                     GetDlgItemText(hDlg, IDC_EDIT_ROWS, input, 16);
                     int val = _wtoi(input);
-                    EndDialog(hDlg, val > 0 ? val : 10);
+                    EndDialog(hDlg, val > 0 ? val : 0);
                     return TRUE;
                 }
                 if (LOWORD(wParam) == IDCANCEL) {

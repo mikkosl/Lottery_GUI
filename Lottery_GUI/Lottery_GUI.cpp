@@ -254,7 +254,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             for (const auto& row : rows) {
                 std::wstring rowStr = FormatLotteryRow(row);
                 TextOutW(hdc, 20, y, rowStr.c_str(), (int)rowStr.length());           // Output rows
-                y += 30;
+                y += 20;
             }
 
             EndPaint(hWnd, &ps);

@@ -206,9 +206,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_COMMAND:
         {
-//		int newRows = g_numRows; // Initialize with current number of rows  
         int wmId = LOWORD(wParam);
-            // Parse the menu selections:
             switch (wmId)
             {
             case IDM_ABOUT:
@@ -217,15 +215,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             case IDM_EXIT:
                 DestroyWindow(hWnd);
                 break;
-   /*       case IDM_SETROWS: // Add this menu item in your resource file
-            {
-			newRows = PromptForNumRows(hWnd, g_numRows);           // Prompt user for new number of rows
-                if (newRows != g_numRows) {
-                    g_numRows = newRows;
-                    InvalidateRect(hWnd, NULL, TRUE); // Force repaint
-                }
-            }
-   */       default:
+            case IDM_NEWLOTTERYROWS:
+                // Force a repaint to generate new rows
+                InvalidateRect(hWnd, NULL, TRUE);
+                break;
+            default:
                 return DefWindowProc(hWnd, message, wParam, lParam);
             }
         }

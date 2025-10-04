@@ -51,7 +51,7 @@ std::vector<int> GenerateLotteryNumbers(int count = 7, int min = 1, int max = 40
 std::wstring FormatLotteryRow(const std::vector<int>& numbers)
 {
     std::wstringstream ss;
-    ss << L"Lottery row: ";
+    // Removed: ss << L"Lottery row: ";
     for (size_t i = 0; i < numbers.size(); ++i) {
         ss << numbers[i];
         if (i < numbers.size() - 1)
@@ -251,9 +251,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     rows.push_back(candidate);
                 }
             }
-            for (const auto& row : rows) {
-                std::wstring rowStr = FormatLotteryRow(row);
-                TextOutW(hdc, 20, y, rowStr.c_str(), (int)rowStr.length());           // Output rows
+            for (size_t i = 0; i < rows.size(); ++i) {
+                std::wstring rowStr = L"Row " + std::to_wstring(i + 1) + L": " + FormatLotteryRow(rows[i]);
+                TextOutW(hdc, 20, y, rowStr.c_str(), (int)rowStr.length());
                 y += 20;
             }
 

@@ -229,7 +229,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
 
-            int y = 20;
+            int y = 10;
+            int x = 45;
             std::vector<std::vector<int>> rows;
             g_numRows = PromptForNumRows(hWnd, g_numRows);           // Prompt user for new number of rows
             while (rows.size() < g_numRows) {
@@ -247,8 +248,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
             for (size_t i = 0; i < rows.size(); ++i) {
                 std::wstring rowStr = L"Row " + std::to_wstring(i + 1) + L": " + FormatLotteryRow(rows[i]);
-                TextOutW(hdc, 20, y, rowStr.c_str(), (int)rowStr.length());
+                TextOutW(hdc, x, y, rowStr.c_str(), (int)rowStr.length());
                 y += 20;
+                if ((i + 1) % 20 == 0) {
+                    x += 300;
+                    y = 10;
+                }
             }
 
             EndPaint(hWnd, &ps);

@@ -10,6 +10,7 @@ HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 int g_numRows = 0; // Default number of rows
+std::vector<std::vector<int>> rows;
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -217,6 +218,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             case IDM_NEWLOTTERYROWS:
                 g_numRows = PromptForNumRows(hWnd, g_numRows);        // Prompt user for new number of rows
                 InvalidateRect(hWnd, NULL, TRUE);                     // Force a repaint to generate new rows
+                while (rows.size() < g_numRows) {
+                    auto candidate = GenerateLotteryNumbers();
+                    bool duplicate = false;
+                    for (const auto& row : rows) {
+                        if (AreRowsEqual(row, candidate)) {
+                            duplicate = true;
+                            break;
+                        }
+                    }
+                    if (!duplicate) {
+                        rows.push_back(candidate);
+                    }
+                }
                 break;
             default:
                 return DefWindowProc(hWnd, message, wParam, lParam);
@@ -227,23 +241,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
-
             int y = 10;
             int x = 45;
-            std::vector<std::vector<int>> rows;
-            while (rows.size() < g_numRows) {
-                auto candidate = GenerateLotteryNumbers();
-                bool duplicate = false;
-                for (const auto& row : rows) {
-                    if (AreRowsEqual(row, candidate)) {
-                        duplicate = true;
-                        break;
-                    }
-                }
-                if (!duplicate) {
-                    rows.push_back(candidate);
-                }
-            }
             for (size_t i = 0; i < rows.size(); ++i) {
                 std::wstring rowStr = L"Row " + std::to_wstring(i + 1) + L": " + FormatLotteryRow(rows[i]);
                 TextOutW(hdc, x, y, rowStr.c_str(), (int)rowStr.length());

@@ -1,12 +1,7 @@
 // Lottery_GUI.cpp : Defines the entry point for the application.
 //
 
-#include "framework.h"
 #include "Lottery_GUI.h"
-#include <vector>
-#include <random>
-#include <string>
-#include <sstream>
 
 #define MAX_LOADSTRING 100
 

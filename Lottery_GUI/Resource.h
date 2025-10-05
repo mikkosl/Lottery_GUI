@@ -32,3 +32,4 @@
 #endif
 #endif
 #define IDM_NEWLOTTERYROWS  32771
+#define IDM_HELP_NEWLOTTERYROWS 32772

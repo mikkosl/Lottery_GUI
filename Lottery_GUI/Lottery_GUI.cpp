@@ -14,7 +14,7 @@
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
-int g_numRows = 5; // Default number of rows
+int g_numRows = 0; // Default number of rows
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -216,8 +216,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 DestroyWindow(hWnd);
                 break;
             case IDM_NEWLOTTERYROWS:
-                // Force a repaint to generate new rows
-                InvalidateRect(hWnd, NULL, TRUE);
+                g_numRows = PromptForNumRows(hWnd, g_numRows);        // Prompt user for new number of rows
+                InvalidateRect(hWnd, NULL, TRUE);                     // Force a repaint to generate new rows
                 break;
             default:
                 return DefWindowProc(hWnd, message, wParam, lParam);
@@ -232,7 +232,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             int y = 10;
             int x = 45;
             std::vector<std::vector<int>> rows;
-            g_numRows = PromptForNumRows(hWnd, g_numRows);           // Prompt user for new number of rows
             while (rows.size() < g_numRows) {
                 auto candidate = GenerateLotteryNumbers();
                 bool duplicate = false;

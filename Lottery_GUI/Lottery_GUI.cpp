@@ -74,7 +74,11 @@ int PromptForNumRows(HWND hWnd, int currentRows) {
                     wchar_t input[16];
                     GetDlgItemText(hDlg, IDC_EDIT_ROWS, input, 16);
                     int val = _wtoi(input);
-                    EndDialog(hDlg, 61 > val > 0 ? val : 0);
+                    if (val < 1 || val > 60) {
+                        MessageBox(hDlg, L"Please enter a number between 1 and 60.", L"Invalid Input", MB_OK | MB_ICONERROR);
+                        return TRUE; // Stay in dialog
+					}
+                    EndDialog(hDlg, val);
                     return TRUE;
                 }
                 if (LOWORD(wParam) == IDCANCEL) {

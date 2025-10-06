@@ -83,6 +83,7 @@ int PromptForNumRows(HWND hWnd, int currentRows) {
                     return TRUE;
                 }
                 if (LOWORD(wParam) == IDCANCEL) {
+					g_numRows = -1; // Indicate cancellation
                     EndDialog(hDlg, g_numRows);
                     return TRUE;
                 }
@@ -217,7 +218,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 break;
             case IDM_NEWLOTTERYROWS:
                 g_numRows = PromptForNumRows(hWnd, g_numRows);        // Prompt user for new number of rows
-				rows.clear();                                         // Clear existing rows
+                if (g_numRows == -1) {                                // User cancelled
+                    g_numRows = 0;                                    // Reset to 0 or previous valid state
+                    break;
+                }
+                rows.clear();                                         // Clear existing rows
                 while (rows.size() < g_numRows) {
                     auto candidate = GenerateLotteryNumbers();
                     bool duplicate = false;

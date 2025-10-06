@@ -217,7 +217,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 break;
             case IDM_NEWLOTTERYROWS:
                 g_numRows = PromptForNumRows(hWnd, g_numRows);        // Prompt user for new number of rows
-                InvalidateRect(hWnd, NULL, TRUE);                     // Force a repaint to generate new rows
+				rows.clear();                                         // Clear existing rows
                 while (rows.size() < g_numRows) {
                     auto candidate = GenerateLotteryNumbers();
                     bool duplicate = false;
@@ -231,6 +231,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         rows.push_back(candidate);
                     }
                 }
+                InvalidateRect(hWnd, NULL, TRUE);                     // Force a repaint to display new rows
                 break;
             default:
                 return DefWindowProc(hWnd, message, wParam, lParam);

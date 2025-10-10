@@ -238,6 +238,36 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
                 InvalidateRect(hWnd, NULL, TRUE);                     // Force a repaint to display new rows
                 break;
+            case IDM_SAVELOTTERYROWS:
+                {
+                    if (rows.empty()) {
+                        MessageBox(hWnd, L"No lottery rows to save. Please generate rows first.", L"Error", MB_OK | MB_ICONERROR);
+                        break;
+                    }
+                    // Open file dialog to select save location
+                    wchar_t filename[MAX_PATH] = L"lottery_rows.txt";
+                    OPENFILENAME ofn = { 0 };
+                    ofn.lStructSize = sizeof(ofn);
+                    ofn.hwndOwner = hWnd;
+                    ofn.lpstrFile = filename;
+                    ofn.nMaxFile = sizeof(filename) / sizeof(filename[0]);
+                    ofn.lpstrFilter = L"Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0";
+                    ofn.nFilterIndex = 1;
+                    ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+                    if (GetSaveFileName(&ofn)) {
+                        std::wofstream outFile(filename);
+                        if (!outFile) {
+                            MessageBox(hWnd, L"Failed to open file for writing.", L"Error", MB_OK | MB_ICONERROR);
+                            break;
+                        }
+                        for (size_t i = 0; i < rows.size(); ++i) {
+                            outFile << L"Row " << (i + 1) << L": " << FormatLotteryRow(rows[i]) << std::endl;
+                        }
+                        outFile.close();
+                        MessageBox(hWnd, L"Lottery rows saved successfully.", L"Success", MB_OK | MB_ICONINFORMATION);
+                    }
+                }
+				break;
             default:
                 return DefWindowProc(hWnd, message, wParam, lParam);
             }

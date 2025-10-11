@@ -27,7 +27,7 @@ bool AreRowsEqual(const std::vector<int>& a, const std::vector<int>& b) {
     return true;
 }
 
-// GenerateLotteryRow now returns vector<int> for easier comparison
+// Generate new Lotto rows
 std::vector<int> GenerateLotteryNumbers(int count = 7, int min = 1, int max = 40)
 {
     std::vector<int> numbers;
@@ -45,10 +45,59 @@ std::vector<int> GenerateLotteryNumbers(int count = 7, int min = 1, int max = 40
     return numbers;
 }
 
+// Generate new Vikinglotto rows
+std::vector<int> GenerateVikingNumbers(int count = 6, int min = 1, int max = 48)
+{
+    std::vector<int> numbers;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(min, max);
+
+    while (numbers.size() < count) {
+        int num = dis(gen);
+        if (std::find(numbers.begin(), numbers.end(), num) == numbers.end()) {
+            numbers.push_back(num);
+        }
+    }
+    std::sort(numbers.begin(), numbers.end());
+    std::uniform_int_distribution<> dis1(1, 5);
+    int num = dis1(gen);
+    numbers.push_back(num);
+    return numbers;
+}
+
+// Generate new Eurojackpot rows
+std::vector<int> GenerateEuroNumbers(int count = 5, int min = 1, int max = 50)
+{
+    std::vector<int> numbers;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(min, max);
+
+    while (numbers.size() < count) {
+        int num = dis(gen);
+        if (std::find(numbers.begin(), numbers.end(), num) == numbers.end()) {
+            numbers.push_back(num);
+        }
+    }
+    std::sort(numbers.begin(), numbers.end());
+    std::uniform_int_distribution<> dis1(1, 12);
+    int num1 = dis1(gen);
+    int num2 = dis1(gen);
+    while (num1 == num2) num2 = dis1(gen);
+    if (num1 < num2) {
+        numbers.push_back(num1);
+        numbers.push_back(num2);
+    } else {
+        numbers.push_back(num2);
+        numbers.push_back(num1);
+    }
+    return numbers;
+}
+
 std::wstring FormatLotteryRow(const std::vector<int>& numbers)
 {
     std::wstringstream ss;
-    // Removed: ss << L"Lottery row: ";
     for (size_t i = 0; i < numbers.size(); ++i) {
         ss << numbers[i];
         if (i < numbers.size() - 1)
@@ -223,7 +272,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                 break;
             case IDM_HELP_NEWLOTTERYROWS:
-                MessageBox(hWnd, L"Select 'New Lottery Rows' from the File menu to generate new lottery rows. You can specify the number of rows (up to 60). Each row contains 7 unique numbers between 1 and 40.", L"Getting Started", MB_OK | MB_ICONINFORMATION);
+                MessageBox(hWnd, L"Open new Rows menu and select the game you want to play. Then input the number of rows you want to generate.", L"Getting Started", MB_OK | MB_ICONINFORMATION);
 				break;
             case IDM_EXIT:
                 DestroyWindow(hWnd);
@@ -250,14 +299,58 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
                 InvalidateRect(hWnd, NULL, TRUE);                     // Force a repaint to display new rows
                 break;
+            case IDM_NEWVIKINGROWS:
+                g_numRows = PromptForNumRows(hWnd, g_numRows);        // Prompt user for new number of rows
+                if (g_numRows == -1) {                                // User cancelled
+                    g_numRows = 0;                                    // Reset to 0 or previous valid state
+                    break;
+                }
+                rows.clear();                                         // Clear existing rows
+                while (rows.size() < g_numRows) {
+                    auto candidate = GenerateVikingNumbers();
+                    bool duplicate = false;
+                    for (const auto& row : rows) {
+                        if (AreRowsEqual(row, candidate)) {
+                            duplicate = true;
+                            break;
+                        }
+                    }
+                    if (!duplicate) {
+                        rows.push_back(candidate);
+                    }
+                }
+                InvalidateRect(hWnd, NULL, TRUE);                     // Force a repaint to display new rows
+                break; 
+            case IDM_NEWEUROROWS:
+                g_numRows = PromptForNumRows(hWnd, g_numRows);        // Prompt user for new number of rows
+                if (g_numRows == -1) {                                // User cancelled
+                    g_numRows = 0;                                    // Reset to 0 or previous valid state
+                    break;
+                }
+                rows.clear();                                         // Clear existing rows
+                while (rows.size() < g_numRows) {
+                    auto candidate = GenerateEuroNumbers();
+                    bool duplicate = false;
+                    for (const auto& row : rows) {
+                        if (AreRowsEqual(row, candidate)) {
+                            duplicate = true;
+                            break;
+                        }
+                    }
+                    if (!duplicate) {
+                        rows.push_back(candidate);
+                    }
+                }
+                InvalidateRect(hWnd, NULL, TRUE);                     // Force a repaint to display new rows
+                break;
             case IDM_SAVELOTTERYROWS:
                 {
                     if (rows.empty()) {
-                        MessageBox(hWnd, L"No lottery rows to save. Please generate rows first.", L"Error", MB_OK | MB_ICONERROR);
+                        MessageBox(hWnd, L"No rows to save. Please generate numbers first.", L"Error", MB_OK | MB_ICONERROR);
                         break;
                     }
                     // Open file dialog to select save location
-                    wchar_t filename[MAX_PATH] = L"lottery_rows.txt";
+                    wchar_t filename[MAX_PATH] = L"rows.txt";
                     OPENFILENAME ofn = { 0 };
                     ofn.lStructSize = sizeof(ofn);
                     ofn.hwndOwner = hWnd;
@@ -276,14 +369,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                             outFile << L"(Row " << (i + 1) << L"): " << FormatLotteryRow(rows[i]) << std::endl;
                         }
                         outFile.close();
-                        MessageBox(hWnd, L"Lottery rows saved successfully.", L"Success", MB_OK | MB_ICONINFORMATION);
+                        MessageBox(hWnd, L"Rows saved successfully.", L"Success", MB_OK | MB_ICONINFORMATION);
                     }
                 }
 				break;
             case IDM_PRINTLOTTERYROWS:
                 {
                     if (rows.empty()) {
-                        MessageBox(hWnd, L"No lottery rows to print. Please generate rows first.", L"Error", MB_OK | MB_ICONERROR);
+                        MessageBox(hWnd, L"No rows to print. Please generate numbers first.", L"Error", MB_OK | MB_ICONERROR);
                         break;
                     }
                     // Simple print to default printer

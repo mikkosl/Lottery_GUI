@@ -4,6 +4,7 @@
 #include "Lottery_GUI.h"
 
 #define MAX_LOADSTRING 100
+#pragma comment(lib, "Winspool.lib")
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
@@ -213,6 +214,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                 break;
+            case IDM_HELP_NEWLOTTERYROWS:
+                MessageBox(hWnd, L"Select 'New Lottery Rows' from the File menu to generate new lottery rows. You can specify the number of rows (up to 60). Each row contains 7 unique numbers between 1 and 40.", L"Getting Started", MB_OK | MB_ICONINFORMATION);
+				break;
             case IDM_EXIT:
                 DestroyWindow(hWnd);
                 break;
@@ -267,6 +271,56 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         MessageBox(hWnd, L"Lottery rows saved successfully.", L"Success", MB_OK | MB_ICONINFORMATION);
                     }
                 }
+				break;
+            case IDM_PRINTLOTTERYROWS:
+                {
+                    if (rows.empty()) {
+                        MessageBox(hWnd, L"No lottery rows to print. Please generate rows first.", L"Error", MB_OK | MB_ICONERROR);
+                        break;
+                    }
+                    // Simple print to default printer
+                    HANDLE hPrinter;
+                    DOCINFO di = { sizeof(DOCINFO) };
+                    di.lpszDocName = L"Lottery Rows";
+                    if (!OpenPrinterW(nullptr, &hPrinter, nullptr)) {
+                        MessageBoxW(nullptr, L"Failed to open printer", L"Error", MB_ICONERROR);
+                        break;
+                    }
+                    WCHAR printerName[256];
+                    DWORD size = sizeof(printerName) / sizeof(WCHAR);
+                    GetDefaultPrinterW(printerName, &size);
+                    HDC hdc = CreateDCW(L"WINSPOOL", printerName, NULL, NULL);
+                    if (!hdc) {
+                        ClosePrinter(hPrinter);
+                        MessageBoxW(nullptr, L"Failed to create printer DC", L"Error", MB_ICONERROR);
+                        break;
+                    }
+                    
+                    if (StartDocW(hdc, &di) <= 0) {
+                        DeleteDC(hdc);
+                        ClosePrinter(hPrinter);
+                        MessageBoxW(nullptr, L"Failed to start document", L"Error", MB_ICONERROR);
+                        break;
+                    }
+                        
+                    StartPage(hdc);
+                    MessageBoxW(nullptr, printerName, L"Printing to default printer:", MB_ICONINFORMATION);
+                    int y = 10;
+                    for (size_t i = 0; i < rows.size(); ++i) {
+                        std::wstring rowStr = L"Row " + std::to_wstring(i + 1) + L": " + FormatLotteryRow(rows[i]);
+                        TextOutW(hdc, 10, y, rowStr.c_str(), (int)rowStr.length());
+                        y += 20;
+                        if (y > 1000) { // Simple pagination
+                            EndPage(hdc);
+                            StartPage(hdc);
+                            y = 10;
+                        }
+                    }
+                    EndPage(hdc);
+                    EndDoc(hdc);
+                    ReleaseDC(hWnd, hdc);
+                    ClosePrinter(hPrinter);
+            }
 				break;
             default:
                 return DefWindowProc(hWnd, message, wParam, lParam);

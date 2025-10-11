@@ -2,6 +2,8 @@
 
 #include "resource.h"
 #include "framework.h"
+#include <windows.h>
+#include <winspool.h>
 #include <vector>
 #include <random>
 #include <string>

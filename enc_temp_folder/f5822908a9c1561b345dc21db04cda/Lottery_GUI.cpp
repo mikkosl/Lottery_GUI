@@ -460,12 +460,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
             }
         }
-          break;
+    
+            break;
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);
         }
-    }
-    break;
+        }
+        break;
     case WM_PAINT:
     {
         PAINTSTRUCT ps;

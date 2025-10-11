@@ -57,6 +57,14 @@ std::wstring FormatLotteryRow(const std::vector<int>& numbers)
     return ss.str();
 }
 
+std::wstring ToLower(const std::wstring& input) {
+    std::wstring result = input;
+    for (wchar_t& ch : result) {
+        ch = towlower(ch);
+    }
+    return result;
+}
+
 // Add a function to prompt for number of rows
 int PromptForNumRows(HWND hWnd, int currentRows) {
     wchar_t buf[16];
@@ -265,7 +273,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                             break;
                         }
                         for (size_t i = 0; i < rows.size(); ++i) {
-                            outFile << L"Row " << (i + 1) << L": " << FormatLotteryRow(rows[i]) << std::endl;
+                            outFile << L"(Row " << (i + 1) << L"): " << FormatLotteryRow(rows[i]) << std::endl;
                         }
                         outFile.close();
                         MessageBox(hWnd, L"Lottery rows saved successfully.", L"Success", MB_OK | MB_ICONINFORMATION);
@@ -305,22 +313,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         
                     StartPage(hdc);
                     MessageBoxW(nullptr, printerName, L"Printing to default printer:", MB_ICONINFORMATION);
-                    int y = 10;
+                    int y = 200;
                     for (size_t i = 0; i < rows.size(); ++i) {
-                        std::wstring rowStr = L"Row " + std::to_wstring(i + 1) + L": " + FormatLotteryRow(rows[i]);
-                        TextOutW(hdc, 10, y, rowStr.c_str(), (int)rowStr.length());
-                        y += 20;
-                        if (y > 1000) { // Simple pagination
-                            EndPage(hdc);
-                            StartPage(hdc);
-                            y = 10;
-                        }
+                        std::wstring rowStr = L"(Row " + std::to_wstring(i + 1) + L"): " + FormatLotteryRow(rows[i]);
+                        TextOutW(hdc, 200, y, rowStr.c_str(), (int)rowStr.length());
+                        std::wstring lowerName = ToLower(printerName);
+                        if (lowerName.find(L"pdf") != std::wstring::npos) y += 110;
+                        else y += 50;
                     }
                     EndPage(hdc);
                     EndDoc(hdc);
-                    ReleaseDC(hWnd, hdc);
+                    DeleteDC(hdc);
                     ClosePrinter(hPrinter);
-            }
+                }
 				break;
             default:
                 return DefWindowProc(hWnd, message, wParam, lParam);
@@ -334,7 +339,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             int y = 10;
             int x = 45;
             for (size_t i = 0; i < rows.size(); ++i) {
-                std::wstring rowStr = L"Row " + std::to_wstring(i + 1) + L": " + FormatLotteryRow(rows[i]);
+                std::wstring rowStr = L"(Row " + std::to_wstring(i + 1) + L"): " + FormatLotteryRow(rows[i]);
                 TextOutW(hdc, x, y, rowStr.c_str(), (int)rowStr.length());
                 y += 20;
                 if ((i + 1) % 20 == 0) {

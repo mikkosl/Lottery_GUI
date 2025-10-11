@@ -11,6 +11,7 @@ HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 int g_numRows = 0; // Default number of rows
+int mode = 0;
 std::vector<std::vector<int>> rows;
 
 // Forward declarations of functions included in this code module:
@@ -38,7 +39,7 @@ std::vector<int> GenerateLotteryNumbers(int count = 7, int min = 1, int max = 40
     while (numbers.size() < count) {
         int num = dis(gen);
         if (std::find(numbers.begin(), numbers.end(), num) == numbers.end()) {
-            numbers.push_back(num);
+			numbers.push_back(num);
         }
     }
     std::sort(numbers.begin(), numbers.end());
@@ -99,9 +100,24 @@ std::wstring FormatLotteryRow(const std::vector<int>& numbers)
 {
     std::wstringstream ss;
     for (size_t i = 0; i < numbers.size(); ++i) {
+        if (numbers[i] < 10) {
+            switch (mode) {
+                case 1: ss << "_";
+            break;
+                case 2: 
+                if(i < 6) ss << "_";
+            break;
+                case 3: 
+                if(i < 5) ss << "_";
+				else ss << " ";
+            break;
+            }
+        }
         ss << numbers[i];
         if (i < numbers.size() - 1)
-            ss << L", ";
+            if (i > 4 && mode == 2) ss << L"  +  ";
+            else if (i == 4 && mode == 3) ss << L"   +  ";
+            else ss << L", ";
     }
     return ss.str();
 }
@@ -266,7 +282,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_COMMAND:
         {
         int wmId = LOWORD(wParam);
-            switch (wmId)
+        switch (wmId)
             {
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
@@ -278,6 +294,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 DestroyWindow(hWnd);
                 break;
             case IDM_NEWLOTTERYROWS:
+                mode = 1;
                 g_numRows = PromptForNumRows(hWnd, g_numRows);        // Prompt user for new number of rows
                 if (g_numRows == -1) {                                // User cancelled
                     g_numRows = 0;                                    // Reset to 0 or previous valid state
@@ -300,6 +317,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 InvalidateRect(hWnd, NULL, TRUE);                     // Force a repaint to display new rows
                 break;
             case IDM_NEWVIKINGROWS:
+				mode = 2;
                 g_numRows = PromptForNumRows(hWnd, g_numRows);        // Prompt user for new number of rows
                 if (g_numRows == -1) {                                // User cancelled
                     g_numRows = 0;                                    // Reset to 0 or previous valid state
@@ -322,6 +340,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 InvalidateRect(hWnd, NULL, TRUE);                     // Force a repaint to display new rows
                 break; 
             case IDM_NEWEUROROWS:
+				mode = 3;
                 g_numRows = PromptForNumRows(hWnd, g_numRows);        // Prompt user for new number of rows
                 if (g_numRows == -1) {                                // User cancelled
                     g_numRows = 0;                                    // Reset to 0 or previous valid state
@@ -366,7 +385,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                             break;
                         }
                         for (size_t i = 0; i < rows.size(); ++i) {
-                            outFile << L"(Row " << (i + 1) << L"): " << FormatLotteryRow(rows[i]) << std::endl;
+                            if(i < 9) outFile << L"(Row  " << (i + 1) << L"): " << FormatLotteryRow(rows[i]) << std::endl;
+							else outFile << L"(Row " << (i + 1) << L"): " << FormatLotteryRow(rows[i]) << std::endl;
                         }
                         outFile.close();
                         MessageBox(hWnd, L"Rows saved successfully.", L"Success", MB_OK | MB_ICONINFORMATION);
@@ -406,9 +426,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         
                     StartPage(hdc);
                     MessageBoxW(nullptr, printerName, L"Printing to default printer:", MB_ICONINFORMATION);
+                    std::wstring rowStr;
                     int y = 200;
                     for (size_t i = 0; i < rows.size(); ++i) {
-                        std::wstring rowStr = L"(Row " + std::to_wstring(i + 1) + L"): " + FormatLotteryRow(rows[i]);
+                        if(i < 9) rowStr = L"(Row   " + std::to_wstring(i + 1) + L"): " + FormatLotteryRow(rows[i]);
+						else rowStr = L"(Row " + std::to_wstring(i + 1) + L"): " + FormatLotteryRow(rows[i]);
                         TextOutW(hdc, 200, y, rowStr.c_str(), (int)rowStr.length());
                         std::wstring lowerName = ToLower(printerName);
                         if (lowerName.find(L"pdf") != std::wstring::npos) y += 110;
@@ -431,8 +453,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             HDC hdc = BeginPaint(hWnd, &ps);
             int y = 10;
             int x = 45;
+            std::wstring rowStr;
             for (size_t i = 0; i < rows.size(); ++i) {
-                std::wstring rowStr = L"(Row " + std::to_wstring(i + 1) + L"): " + FormatLotteryRow(rows[i]);
+                if(i < 9) rowStr = L"(Row   " + std::to_wstring(i + 1) + L"): " + FormatLotteryRow(rows[i]);
+                else rowStr = L"(Row " + std::to_wstring(i + 1) + L"): " + FormatLotteryRow(rows[i]);
                 TextOutW(hdc, x, y, rowStr.c_str(), (int)rowStr.length());
                 y += 20;
                 if ((i + 1) % 20 == 0) {

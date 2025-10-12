@@ -381,7 +381,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     break;
                 }
                 for (size_t i = 0; i < rows.size(); ++i) {
-                    if (i < 9) outFile << L"(Row  " << (i + 1) << L"): " << FormatLotteryRow(rows[i]) << std::endl;
+                    if (i < 9) outFile << L"(Row 0" << (i + 1) << L"): " << FormatLotteryRow(rows[i]) << std::endl;
                     else outFile << L"(Row " << (i + 1) << L"): " << FormatLotteryRow(rows[i]) << std::endl;
                 }
                 outFile.close();
@@ -463,12 +463,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     std::wstring rowStr;
                     int y = 200;
                     for (size_t i = 0; i < rows.size(); ++i) {
-                        if (i < 9) rowStr = L"(Row   " + std::to_wstring(i + 1) + L"): " + FormatLotteryRow(rows[i]);
+                        if (i < 9) rowStr = L"(Row 0" + std::to_wstring(i + 1) + L"): " + FormatLotteryRow(rows[i]);
                         else rowStr = L"(Row " + std::to_wstring(i + 1) + L"): " + FormatLotteryRow(rows[i]);
                         TextOutW(hdc, 200, y, rowStr.c_str(), (int)rowStr.length());
                         std::wstring lowerName = ToLower(safePrinterName);
-                        if (wcsncmp(safePrinterName, L"Microsoft Print to PDF", 256) != 0) y += 110;
-                        else y += 50;
+                        y += 110;
                     }
                     EndPage(hdc);
                     EndDoc(hdc);
@@ -492,7 +491,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         int x = 45;
         std::wstring rowStr;
         for (size_t i = 0; i < rows.size(); ++i) {
-            if (i < 9) rowStr = L"(Row   " + std::to_wstring(i + 1) + L"): " + FormatLotteryRow(rows[i]);
+            if (i < 9) rowStr = L"(Row 0" + std::to_wstring(i + 1) + L"): " + FormatLotteryRow(rows[i]);
             else rowStr = L"(Row " + std::to_wstring(i + 1) + L"): " + FormatLotteryRow(rows[i]);
             TextOutW(hdc, x, y, rowStr.c_str(), (int)rowStr.length());
             y += 20;

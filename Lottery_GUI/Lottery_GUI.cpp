@@ -361,10 +361,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
             case 1:
                 wcscpy_s(filename, L"Lotto.txt");
+                break;
             case 2:
                 wcscpy_s(filename, L"Vikinglotto.txt");
+                break;
             case 3:
                 wcscpy_s(filename, L"Eurojackpot.txt");
+                break;
+            default:
+                wcscpy_s(filename, L"rows.txt");
+                break;
             }
             OPENFILENAME ofn = { 0 };
             ofn.lStructSize = sizeof(ofn);
@@ -466,7 +472,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         if (i < 9) rowStr = L"(Row 0" + std::to_wstring(i + 1) + L"): " + FormatLotteryRow(rows[i]);
                         else rowStr = L"(Row " + std::to_wstring(i + 1) + L"): " + FormatLotteryRow(rows[i]);
                         TextOutW(hdc, 200, y, rowStr.c_str(), (int)rowStr.length());
-                        std::wstring lowerName = ToLower(safePrinterName);
                         y += 110;
                     }
                     EndPage(hdc);

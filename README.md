@@ -1,1 +1,1 @@
-This C++ code implements a GUI-driven Windows program that generates 1 to 60 rows of 7 numbers between 1 and 40 for Finnish lottery.
+This C++ code implements a GUI-driven Windows program that generates 1 to 60 rows of Finnish Lotto, Vikinglotto or Eurojackpot.

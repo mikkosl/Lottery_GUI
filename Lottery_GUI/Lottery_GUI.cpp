@@ -408,28 +408,49 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             if (PrintDlg(&pd)) {
                 // Extract printer name AFTER PrintDlg succeeds
-                DEVNAMES* pDevNames = (DEVNAMES*)GlobalLock(pd.hDevNames);
-                LPCWSTR printerName = nullptr;
+                WCHAR safePrinterName[256] = { 0 };
+                if (pd.hDevNames) {
+                    DEVNAMES* pDevNames = (DEVNAMES*)GlobalLock(pd.hDevNames);
+                    if (pDevNames) {
+                        LPCWSTR printerName = (LPCWSTR)pDevNames + pDevNames->wDeviceOffset;
+                        // Use printerName safely
+                        GlobalUnlock(pd.hDevNames);
+                    } else {
+                        if (!pDevNames) {
+                            DWORD err = GetLastError();
+                            WCHAR msg[256];
+                            FormatMessageW(
+                                FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                                NULL,
+                                err,
+                                0,
+                                msg,
+                                _countof(msg),
+                                NULL
+                            );
+                            MessageBoxW(NULL, msg, L"GlobalLock Failed", MB_ICONERROR);
+                        }  
+					}
                 if (pDevNames) {
-                    printerName = (LPCWSTR)pDevNames + pDevNames->wDeviceOffset;
+                    LPCWSTR rawPtr = (LPCWSTR)pDevNames + pDevNames->wDeviceOffset;
+                    wcsncpy_s(safePrinterName, rawPtr, _countof(safePrinterName) - 1);
                 }
-
+                GlobalUnlock(pd.hDevNames);
+            } else {
+                 MessageBoxW(nullptr, L"Failed to get printer name", L"Error", MB_ICONERROR);
+                 break;
+			}
                 PRINTER_DEFAULTS defaults = { 0 };
                 defaults.pDatatype = nullptr;
                 defaults.pDevMode = (DEVMODE*)GlobalLock(pd.hDevMode);
-                defaults.DesiredAccess = PRINTER_ALL_ACCESS;
-                wchar_t printerNameBuffer[256]; // or use dynamic allocation if needed
-                wcscpy_s(printerNameBuffer, printerName); 
-              
-                if (!OpenPrinterW(printerNameBuffer, &hPrinter, &defaults)) {
-                    MessageBoxW(nullptr, L"Failed to open printer", L"Error", MB_ICONERROR);
-                }
-                else {
-                    MessageBox(hWnd, L"Printing...", printerNameBuffer, MB_OK | MB_ICONINFORMATION);
-                    HDC hdc = CreateDCW(L"WINSPOOL", printerNameBuffer, NULL, NULL);
+                defaults.DesiredAccess = PRINTER_ACCESS_USE;
+                if (!OpenPrinterW(safePrinterName, &hPrinter, &defaults)) {
+                    MessageBoxW(nullptr, L"Failed to open printer", safePrinterName, MB_ICONERROR);
+                } else {
+                    HDC hdc = CreateDCW(L"WINSPOOL", safePrinterName, NULL, NULL);
                     if (!hdc) {
                         ClosePrinter(hPrinter);
-                        MessageBoxW(nullptr, L"Failed to create printer DC", L"Error", MB_ICONERROR);
+                        MessageBoxW(nullptr, L"Failed to create printer DC", safePrinterName, MB_ICONERROR);
                         break;
                     }
                     DOCINFOW di = { 0 };
@@ -439,7 +460,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     if (StartDocW(hdc, &di) <= 0) {
                         DeleteDC(hdc);
                         ClosePrinter(hPrinter);
-                        MessageBoxW(nullptr, L"Failed to start document", L"Error", MB_ICONERROR);
+                        MessageBoxW(nullptr, L"Failed to start document", safePrinterName, MB_ICONERROR);
                         break;
                     }
                     StartPage(hdc);
@@ -448,19 +469,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     for (size_t i = 0; i < rows.size(); ++i) {
                         if (i < 9) rowStr = L"(Row   " + std::to_wstring(i + 1) + L"): " + FormatLotteryRow(rows[i]);
                         else rowStr = L"(Row " + std::to_wstring(i + 1) + L"): " + FormatLotteryRow(rows[i]);
-                        TextOutW(pd.hDC, 200, y, rowStr.c_str(), (int)rowStr.length());
-                        std::wstring lowerName = ToLower(printerNameBuffer);
-                        if (lowerName.find(L"pdf") != std::wstring::npos) y += 110;
+                        TextOutW(hdc, 200, y, rowStr.c_str(), (int)rowStr.length());
+                        std::wstring lowerName = ToLower(safePrinterName);
+                        if (wcsncmp(safePrinterName, L"Microsoft Print to PDF", 256) != 0) y += 110;
                         else y += 50;
                     }
                     EndPage(hdc);
                     EndDoc(hdc);
                     DeleteDC(hdc);
                     ClosePrinter(hPrinter);
+                    MessageBox(hWnd, L"Printing...", safePrinterName, MB_OK | MB_ICONINFORMATION);
                 }
             }
         }
-          break;
+            break;
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);
         }

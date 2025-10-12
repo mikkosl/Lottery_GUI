@@ -11,7 +11,7 @@ HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 int g_numRows = 0; // Default number of rows
-int mode = 0;
+int mode = 0; // 1 = Lotto, 2 = Vikinglotto, 3 = Eurojackpot
 std::vector<std::vector<int>> rows;
 
 // Forward declarations of functions included in this code module:
@@ -100,23 +100,10 @@ std::wstring FormatLotteryRow(const std::vector<int>& numbers)
 {
     std::wstringstream ss;
     for (size_t i = 0; i < numbers.size(); ++i) {
-        if (numbers[i] < 10) {
-            switch (mode) {
-                case 1: ss << "_";
-            break;
-                case 2: 
-                if(i < 6) ss << "_";
-            break;
-                case 3: 
-                if(i < 5) ss << "_";
-				else ss << " ";
-            break;
-            }
-        }
         ss << numbers[i];
         if (i < numbers.size() - 1)
             if (i > 4 && mode == 2) ss << L"  +  ";
-            else if (i == 4 && mode == 3) ss << L"   +  ";
+            else if (i == 4 && mode == 3) ss << L"  +  ";
             else ss << L", ";
     }
     return ss.str();
@@ -288,7 +275,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
             break;
         case IDM_HELP_NEWLOTTERYROWS:
-            MessageBox(hWnd, L"Open new Rows menu and select the game you want to play. Then input the number of rows you want to generate.", L"Getting Started", MB_OK | MB_ICONINFORMATION);
+            MessageBox(hWnd, L"Open New menu and select the game you want to play. Then input the number of rows you want to generate.", L"Getting Started", MB_OK | MB_ICONINFORMATION);
             break;
         case IDM_EXIT:
             DestroyWindow(hWnd);
@@ -369,7 +356,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 break;
             }
             // Open file dialog to select save location
-            wchar_t filename[MAX_PATH] = L"rows.txt";
+            wchar_t filename[MAX_PATH] = L"";
+            switch (mode)
+            {
+            case 1:
+                wcscpy_s(filename, L"Lotto.txt");
+            case 2:
+                wcscpy_s(filename, L"Vikinglotto.txt");
+            case 3:
+                wcscpy_s(filename, L"Eurojackpot.txt");
+            }
             OPENFILENAME ofn = { 0 };
             ofn.lStructSize = sizeof(ofn);
             ofn.hwndOwner = hWnd;
